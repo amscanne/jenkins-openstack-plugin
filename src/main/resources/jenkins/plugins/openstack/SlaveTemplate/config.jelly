@@ -1,0 +1,62 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <table width="100%">
+
+  <f:entry title="${%Id}" field="id">
+    <f:textbox/>
+  </f:entry>
+
+  <f:entry title="${%Description}" help="/help/system-config/master-slave/description.html" field="description">
+    <f:textbox />
+  </f:entry>
+
+  <f:entry title="${%Image}" field="imageId">
+    <f:textbox/>
+  </f:entry>
+
+  <f:entry title="${%Flavor}" field="flavorId">
+    <f:textbox/>
+  </f:entry>
+
+  <f:entry title="${%Key name}" field="keyName">
+    <f:textbox/>
+  </f:entry>
+
+  <f:entry title="${%Availability zone}" field="availabilityZone">
+    <f:textbox/>
+  </f:entry>
+
+  <f:entry title="${%Security groups}" field="securityGroupsStr">
+    <f:textbox/>
+  </f:entry>
+
+  <f:entry title="${%Remote filesystem location}" field="remoteFS">
+    <f:textbox />
+  </f:entry>
+
+  <f:entry title="${%Remote user}" field="remoteUser" default="root">
+    <f:textbox />
+  </f:entry>
+
+  <f:entry title="${%Labels}" help="/help/system-config/master-slave/labels.html" field="labelString">
+    <f:textbox />
+  </f:entry>
+
+  <f:advanced>
+    <f:entry title="${%Number of Executors}" field="numExecutors">
+      <f:textbox />
+    </f:entry>
+    <f:entry title="${%Stop on Terminate}" field="stopOnTerminate">
+      <f:checkbox />
+    </f:entry>
+  </f:advanced>
+
+  <f:validateButton title="${%Validate}" progress="${%Checking...}" method="validate" with="authUrl,authUsername,authPassword,authTenant,regionName,imageId,flavorId,keyName,availabilityZone" />
+
+  <f:entry title="">
+    <div align="right">
+      <f:repeatableDeleteButton />
+    </div>
+  </f:entry>
+
+  </table>
+</j:jelly>

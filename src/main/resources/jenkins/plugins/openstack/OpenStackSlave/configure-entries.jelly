@@ -1,0 +1,17 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <f:entry title="${%Cloud id}" field="cloudId">
+    <f:textbox />
+  </f:entry>
+
+  <f:entry title="${%Template id}" field="templateId">
+    <f:textbox />
+  </f:entry>
+
+  <f:entry title="${%Server id}" field="serverId">
+    <f:textbox />
+  </f:entry>
+
+  <f:entry title="${%Stop on Terminate}" field="stopOnTerminate">
+    <f:checkbox />
+  </f:entry>
+</j:jelly>

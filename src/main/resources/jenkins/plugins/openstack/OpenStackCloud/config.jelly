@@ -1,0 +1,33 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <f:entry title="${%Cloud ID}" field="id">
+    <f:textbox />
+  </f:entry>
+  <f:entry title="${%Auth URL}" field="authUrl" default="http://127.0.0.1:5000/v2.0/">
+    <f:textbox />
+  </f:entry>
+  <f:entry title="${%Username}" field="authUsername" default="admin">
+    <f:textbox />
+  </f:entry>
+  <f:entry title="${%Password}" field="authPassword" default="admin">
+    <f:textbox />
+  </f:entry>
+  <f:entry title="${%Tenant}" field="authTenant" default="admin">
+    <f:textbox />
+  </f:entry>
+  <f:entry title="${%Region}" field="regionName" default="RegionOne">
+    <f:textbox />
+  </f:entry>
+  <f:advanced>
+    <f:entry title="${%Instance Cap}" field="instanceCapStr">
+      <f:textbox />
+    </f:entry>
+  </f:advanced>
+  <f:validateButton title="${%Test Connection}" progress="${%Testing...}" method="testConnection" with="id,authUrl,authUsername,authPassword,authTenant,regionName" />
+
+  <f:entry title="${%Templates}">
+    <f:repeatable field="templates">
+      <st:include page="config.jelly" class="${descriptor.clazz}" />
+    </f:repeatable>
+  </f:entry>
+
+</j:jelly>
