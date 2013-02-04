@@ -3,13 +3,13 @@ package jenkins.plugins.openstack;
 import hudson.Extension;
 import hudson.model.TaskListener;
 import hudson.model.Descriptor.FormException;
+import hudson.os.windows.ManagedWindowsServiceLauncher;
 import hudson.plugins.sshslaves.SSHLauncher;
 import hudson.slaves.AbstractCloudComputer;
 import hudson.slaves.AbstractCloudSlave;
 import hudson.slaves.NodeProperty;
 import hudson.slaves.ComputerLauncher;
 import hudson.slaves.SlaveComputer;
-import hudson.tools.JDKInstaller;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -24,8 +24,6 @@ import org.openstack.nova.model.Server.Addresses.Address;
 
 public final class OpenStackSlave extends AbstractCloudSlave {
 
-	private static final int MAX_RETRIES = 10;
-	
 	public final String cloudId;
 	public final String templateId;
 	public final String serverId;
@@ -44,11 +42,17 @@ public final class OpenStackSlave extends AbstractCloudSlave {
     		 OpenStackCloud.get(cloudId),
     		 OpenStackCloud.get(cloudId).connect().execute(ServersCore.showServer(serverId)));
     }
-    
+	
+    public OpenStackSlave(SlaveTemplate template,
+    					  OpenStackCloud parent,
+    					  Server server) throws IOException, FormException {
+    	this(template, parent, server, template.stopOnTerminate);
+    }
+
 	public OpenStackSlave(SlaveTemplate template,
 						  OpenStackCloud parent,
-						  Server server)
-								  throws IOException, FormException {
+						  Server server,
+						  boolean stopOnTerminate) throws IOException, FormException {
 		super(template.id + " (" + server.getId() + ")",
 			  template.description,
 			  template.remoteFS,
@@ -58,16 +62,22 @@ public final class OpenStackSlave extends AbstractCloudSlave {
 			  new OpenStackComputerLauncher(),
 			  new OpenStackRetentionStrategy(),
 			  Collections.<NodeProperty<?>>emptyList());
+		
 		this.cloudId = parent.id;
 		this.templateId = template.id;
 		this.serverId = server.getId();
-		this.stopOnTerminate = template.stopOnTerminate;
-		this.template = template;
-		this.parent = parent;
-		this.server = server;
-		update();
+		this.stopOnTerminate = stopOnTerminate;
+		readResolve();
 	}
     
+	protected Object readResolve() {
+    	super.readResolve();
+		this.setLauncher(new OpenStackComputerLauncher());
+		this.setRetentionStrategy(new OpenStackRetentionStrategy());
+		update();
+    	return this;
+	}
+	
 	@Override
 	public ComputerLauncher getLauncher() {
 		return new OpenStackComputerLauncher();
@@ -79,8 +89,15 @@ public final class OpenStackSlave extends AbstractCloudSlave {
     }
 
     protected void update() {
+    	/* Reload the cloud pointer. */
+    	parent = OpenStackCloud.get(cloudId);
+    	
+    	/* Reload the template if required. */
+    	template = parent.getTemplate(templateId);
+    	
+    	/* Update the server. */
     	NovaClient client = parent.connect();
-    	server = client.execute(ServersCore.showServer(server.getId()));
+    	server = client.execute(ServersCore.showServer(serverId));
     }
 
     protected synchronized void waitForActive() throws InterruptedException {
@@ -94,7 +111,9 @@ public final class OpenStackSlave extends AbstractCloudSlave {
     }
     
 	@Override
-	protected synchronized void _terminate(TaskListener listener) throws IOException, InterruptedException {
+	protected synchronized void _terminate(TaskListener listener)
+			throws IOException, InterruptedException {
+		update();
 		if( parent != null && server != null ) {
 			NovaClient client = parent.connect();
 			client.execute(ServersCore.deleteServer(server.getId()));
@@ -103,40 +122,53 @@ public final class OpenStackSlave extends AbstractCloudSlave {
 		notifyAll();
 	}
 
-	public synchronized void launch(SlaveComputer computer, TaskListener listener) throws InterruptedException {
-		int retries = 0;
+	public boolean isUnix() {
+		update();
+		return template.isUnix;
+	}
+	
+	public synchronized void launch(SlaveComputer computer, TaskListener listener)
+			throws InterruptedException {
 		update();
 		
-		OUTER:
-		while( true ) {
-			/*
-			 * TODO:
-			 * Support various SSH options (possibly bootstrapped directly
-			 * from the ssh-slaves plugin configuration). For now, we use
-			 * only key-based authentication from the standard spots -- and
-			 * we assume that Java is installed on the images when they come
-			 * up.
-			 */
-			Addresses addresses = server.getAddresses();
-			for( List<Address> network : addresses.getAddresses().values() ) {
-				for( Address addr : network ) {
-					SSHLauncher launcher = new SSHLauncher(
-							addr.getAddr(),
-							22,
-							template.remoteUser,
-							null /* password */,
-							null /* private key */,
-							null, null, null,
-							null, null);
-					launcher.launch(computer, listener);
-					if( launcher.getConnection() != null )
-						break OUTER;
+		/*
+		 * TODO:
+		 * Support various SSH options (possibly bootstrapped directly
+		 * from the ssh-slaves plugin configuration). For now, we use
+		 * only key-based authentication from the standard spots -- and
+		 * we assume that Java is installed on the images when they come
+		 * up.
+		 */
+		Addresses addresses = server.getAddresses();
+		for( List<Address> network : addresses.getAddresses().values() ) {
+			for( Address addr : network ) {
+				ComputerLauncher launcher;
+				
+				if( computer.isUnix().booleanValue() ) {
+					launcher = new SSHLauncher(
+								addr.getAddr(), 22,
+								template.remoteUser,
+								template.remotePassword, /* password */
+								template.privateKey, /* private key */
+								null, null, null, /* JDK installation */
+								template.remoteUser.equals("root") ? null : "sudo", /* prefix */
+								null); /* suffix */
+				} else {
+					launcher =
+						new ManagedWindowsServiceLauncher(
+								template.remoteUser,
+								template.remotePassword,
+								addr.getAddr());
 				}
+
+				try {
+					launcher.launch(computer, listener);
+				} catch (IOException e) {
+					continue;
+				}
+				if( computer.getChannel() != null )
+					return;
 			}
-			
-			if( retries > MAX_RETRIES )
-				break;
-			retries++;
 		}
 	}
 
@@ -145,11 +177,6 @@ public final class OpenStackSlave extends AbstractCloudSlave {
         @Override
 		public String getDisplayName() {
             return "OpenStack";
-        }
-
-        @Override
-        public boolean isInstantiable() {
-            return false;
         }
     }
 }

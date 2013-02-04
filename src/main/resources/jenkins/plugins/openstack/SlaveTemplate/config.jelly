@@ -37,6 +37,18 @@
     <f:textbox />
   </f:entry>
 
+  <f:entry title="${%Remote password}" field="remotePassword">
+    <f:textbox />
+  </f:entry>
+  
+  <f:entry title="${%Private key}" field="privateKey">
+    <f:textbox />
+  </f:entry>
+
+  <f:entry title="${%Is unix}" field="isUnix" default="true">
+    <f:checkbox />
+  </f:entry>
+
   <f:entry title="${%Labels}" help="/help/system-config/master-slave/labels.html" field="labelString">
     <f:textbox />
   </f:entry>

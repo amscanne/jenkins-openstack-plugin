@@ -31,8 +31,11 @@ public class SlaveTemplate implements Describable<SlaveTemplate> {
     public final String keyName;
     public final String securityGroupsStr;
     
+    public final boolean isUnix;
     public final String remoteFS;
     public final String remoteUser;
+    public final String remotePassword;
+    public final String privateKey;
     public final String labels;
     public final String numExecutors;
     public final boolean stopOnTerminate;
@@ -49,8 +52,11 @@ public class SlaveTemplate implements Describable<SlaveTemplate> {
     					 String keyName,
     					 String availabilityZone,
     					 String securityGroupsStr,
+    					 boolean isUnix,
     					 String remoteFS,
     					 String remoteUser,
+    					 String remotePassword,
+    					 String privateKey,
     					 String labelString,
     					 String numExecutors,
     					 boolean stopOnTerminate) {
@@ -64,8 +70,11 @@ public class SlaveTemplate implements Describable<SlaveTemplate> {
         this.availabilityZone = availabilityZone;
         this.securityGroupsStr = Util.fixNull(securityGroupsStr);
         
+        this.isUnix = isUnix;
         this.remoteFS = Util.fixNull(remoteFS);
         this.remoteUser = (remoteUser == null || remoteUser.length() == 0) ? "root" : remoteUser;
+        this.remotePassword = Util.fixEmpty(remotePassword);
+        this.privateKey = Util.fixEmpty(privateKey);
         this.labels = Util.fixNull(labelString);
         this.numExecutors = numExecutors;
         this.stopOnTerminate = stopOnTerminate;

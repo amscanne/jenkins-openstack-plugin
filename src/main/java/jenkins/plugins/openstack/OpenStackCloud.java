@@ -291,5 +291,5 @@ public class OpenStackCloud extends AbstractCloudImpl {
 		public String getDisplayName() {
             return "OpenStack";
         }
-    }
+	}
 }
