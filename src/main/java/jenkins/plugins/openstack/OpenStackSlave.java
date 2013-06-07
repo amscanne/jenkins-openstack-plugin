@@ -151,7 +151,7 @@ public final class OpenStackSlave extends AbstractCloudSlave {
 								template.remotePassword, /* password */
 								template.privateKey, /* private key */
 								null, null, null, /* JDK installation */
-								template.remoteUser.equals("root") ? null : "sudo", /* prefix */
+								null, /* prefix */
 								null); /* suffix */
 				} else {
 					launcher =

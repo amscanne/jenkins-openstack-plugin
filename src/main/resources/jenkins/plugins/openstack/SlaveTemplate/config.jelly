@@ -29,7 +29,7 @@
     <f:textbox/>
   </f:entry>
 
-  <f:entry title="${%Remote filesystem location}" field="remoteFS">
+  <f:entry title="${%Remote filesystem location}" field="remoteFS" default="slave">
     <f:textbox />
   </f:entry>
 
@@ -49,7 +49,7 @@
     <f:checkbox />
   </f:entry>
 
-  <f:entry title="${%Labels}" help="/help/system-config/master-slave/labels.html" field="labelString">
+  <f:entry title="${%Labels}" help="/help/system-config/master-slave/label.html" field="labelString">
     <f:textbox />
   </f:entry>
 
