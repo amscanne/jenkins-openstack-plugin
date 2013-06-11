@@ -53,7 +53,7 @@ public final class OpenStackSlave extends AbstractCloudSlave {
 						  OpenStackCloud parent,
 						  Server server,
 						  boolean stopOnTerminate) throws IOException, FormException {
-		super(template.id + " (" + server.getId() + ")",
+		super(template.id + ":" + server.getId().substring(0, 8),
 			  template.description,
 			  template.remoteFS,
 			  template.getNumExecutors(),
